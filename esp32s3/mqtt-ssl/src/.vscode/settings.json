@@ -1,0 +1,21 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.espIdfPathWin": "d:\\esp\\v5.4.3\\firmware\\v5.4.3\\esp-idf",
+  "idf.pythonInstallPath": "d:\\esp\\v5.4.3\\tool\\tools\\idf-python\\3.11.2\\python.exe",
+  "idf.espAdfPathWin": "D:\\esp\\esp-adf",
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.portWin": "COM3",
+  "idf.toolsPathWin": "d:\\esp\\v5.4.3\\tool",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "clangd.path": "d:\\esp\\v5.4.3\\tool\\tools\\esp-clang\\esp-18.1.2_20240912\\esp-clang\\bin\\clangd.exe",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=d:\\Users\\zishen\\Desktop\\esp32_mqtt\\.vscode\\esp_mqtt\\build"
+  ],
+  "idf.currentSetup": "d:\\esp\\v5.4.3\\firmware\\v5.4.3\\esp-idf"
+}
