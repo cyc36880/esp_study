@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>ESP32 WebSocket Demo</title>
+  <style>
+    html {
+      height: 100%;
+    }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: url('/man.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      padding: 30px;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgb(240, 220, 149);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px 30px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .status {
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    .status span {
+      font-weight: bold;
+    }
+
+    .status.connected span {
+      color: green;
+    }
+
+    .status.disconnected span {
+      color: red;
+    }
+
+    .input-group {
+      display: flex;
+      margin-bottom: 15px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+
+    button {
+      margin-left: 10px;
+      padding: 8px 16px;
+      font-size: 1em;
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    .btn-a {
+      background-color: #e74c3c;
+    }
+
+    .btn-a:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-b {
+      background-color: #2ecc71;
+    }
+
+    .btn-b:hover {
+      background-color: #27ae60;
+    }
+
+    .http-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .http-group button {
+      margin-left: 0;
+      min-width: 60px;
+    }
+
+    .http-group input {
+      flex: 1;
+    }
+
+    pre {
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 220px;
+      overflow-y: auto;
+      border-radius: 8px;
+      font-size: 0.9em;
+    }
+
+    .section-title {
+      font-weight: bold;
+      color: #555;
+      margin: 10px 0 5px;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>ESP32 WebSocket Demo</h2>
+    <div class="status" id="status" class="disconnected">
+      Status: <span>Connecting...</span>
+    </div>
+
+    <!-- WebSocket 区域 -->
+    <div class="section-title">WebSocket</div>
+    <div class="input-group">
+      <input id="msg" type="text" placeholder="Enter message" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- HTTP 按钮区域 -->
+    <div class="section-title">HTTP Button Control</div>
+    <div class="http-group">
+      <button class="btn-a" onclick="sendButton('A')">A</button>
+      <button class="btn-b" onclick="sendButton('B')">B</button>
+      <input id="http-response" type="text" placeholder="Server response..." readonly />
+    </div>
+
+    <pre id="log"></pre>
+  </div>
+
+  <script>
+    // ==================== WebSocket ====================
+    let ws;
+
+    const statusEl = document.getElementById("status");
+
+    function log(msg) {
+      const logEl = document.getElementById("log");
+      const timestamp = new Date().toLocaleTimeString();
+      logEl.textContent += `[${timestamp}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateStatus(connected) {
+      if (connected) {
+        statusEl.className = "status connected";
+        statusEl.innerHTML = "Status: <span>Connected</span>";
+      } else {
+        statusEl.className = "status disconnected";
+        statusEl.innerHTML = "Status: <span>Disconnected</span>";
+      }
+    }
+
+    function connectWebSocket() {
+      const wsUrl = `ws://${location.host}/ws`;
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        updateStatus(true);
+        log("WebSocket connected");
+      };
+
+      ws.onmessage = (e) => log("Received: " + e.data);
+
+      ws.onerror = (e) => log("WebSocket error");
+
+      ws.onclose = () => {
+        updateStatus(false);
+        log("WebSocket disconnected, retrying in 3s...");
+        setTimeout(connectWebSocket, 3000);
+      };
+    }
+
+    function sendMessage() {
+      const msgInput = document.getElementById("msg");
+      const msg = msgInput.value.trim();
+      if (!msg) return;
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(msg);
+        log("Sent: " + msg);
+        msgInput.value = "";
+      } else {
+        log("Cannot send: WebSocket not connected");
+      }
+    }
+
+    // ==================== HTTP Button ====================
+    async function sendButton(label) {
+      log("HTTP: Sending button [" + label + "]");
+      try {
+        const response = await fetch("/button?btn=" + encodeURIComponent(label));
+        if (!response.ok) {
+          log("HTTP: Error " + response.status);
+          return;
+        }
+        const text = await response.text();
+        document.getElementById("http-response").value = text;
+        log("HTTP: Server response: " + text);
+      } catch (err) {
+        log("HTTP: Request failed: " + err.message);
+      }
+    }
+
+    connectWebSocket();
+  </script>
+</body>
+
+</html>
